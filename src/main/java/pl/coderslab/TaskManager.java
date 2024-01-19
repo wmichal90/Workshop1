@@ -17,7 +17,7 @@ public class TaskManager {
         String [][] finalListOfTasks = null;
         String[][] allTasks = tasks(tasksPath);
         if (allTasks == null){
-            return;
+            allTasks = runChosenOption("add", null, tasksPath);
         }
         while (true){
 
@@ -87,7 +87,7 @@ public class TaskManager {
     public static String[][] runChosenOption(String input, String[][] listOfTasks, String filePath){
         return switch (input) {
             case "add" -> addTask(listOfTasks);
-            case "remove" -> removeTask(listOfTasks);
+            case "remove" -> removeTask(listOfTasks, filePath);
             case "list" -> listTasks(listOfTasks);
             case "exit" -> exitProgram(listOfTasks, filePath);
             default -> {
@@ -114,55 +114,60 @@ public class TaskManager {
                 break;
             }
         }
-        listOfTasks = Arrays.copyOf(listOfTasks, listOfTasks.length + 1);
-        listOfTasks[listOfTasks.length - 1] = singleTask;
+        if (listOfTasks != null){
+
+            listOfTasks = Arrays.copyOf(listOfTasks, listOfTasks.length + 1);
+            listOfTasks[listOfTasks.length - 1] = singleTask;
+        } else{
+            listOfTasks = new String[1][singleTask.length];
+            listOfTasks[0] = singleTask;
+        }
         return listOfTasks;
 
     }
 
-    public static String[][] removeTask(String[][] listOfTasks){
-        String [][] shrinkedListOfTasks = new String[listOfTasks.length - 1][1];
-        int counter = 0;
-        int index = 0;
-        String userInput = null;
-        Scanner readInput = new Scanner(System.in);
+    public static String[][] removeTask(String[][] listOfTasks, String tasksPath){
+        if (listOfTasks.length > 0) {
+            String[][] shrinkedListOfTasks = new String[listOfTasks.length - 1][1];
+            int counter = 0;
+            int index = 0;
+            String userInput = null;
+            Scanner readInput = new Scanner(System.in);
 
 
-
-        while (true){
-            System.out.print("Please select a number to remove: ");
-            userInput = readInput.nextLine().strip();
-            if (StringUtils.isNumeric(userInput)){
-                index = Integer.parseInt(userInput);
-                if (index >= listOfTasks.length){
-                    System.out.println("Please provide an integer number in the range: [0, " + (listOfTasks.length - 1) + "]");
-                } else {
-                    for (int i = 0; i < listOfTasks.length; i++){
-                        if (i != index){
-                            shrinkedListOfTasks[counter] = listOfTasks[i];
-                            counter++;
+            while (true) {
+                System.out.print("Please select a number to remove: ");
+                userInput = readInput.nextLine().strip();
+                if (StringUtils.isNumeric(userInput)) {
+                    index = Integer.parseInt(userInput);
+                    if (index >= listOfTasks.length) {
+                        System.out.println("Please provide an integer number in the range: [0, " + (listOfTasks.length - 1) + "]");
+                    } else {
+                        for (int i = 0; i < listOfTasks.length; i++) {
+                            if (i != index) {
+                                shrinkedListOfTasks[counter] = listOfTasks[i];
+                                counter++;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
+
+            System.out.println("Value was successfully removed!");
+            return shrinkedListOfTasks;
+        }else {
+            System.out.println(ConsoleColors.YELLOW + "There are no tasks in tasks manager. Please create one!");
+            return runChosenOption("add", null, tasksPath);
         }
-
-
-
-
-//        if (index < listOfTasks.length){
-
-
-//        }
-        System.out.println("Value was successfully removed!");
-        return shrinkedListOfTasks;
     }
 
     public static String[][] listTasks(String[][] listOfTasks){
-        for (int i = 0; i < listOfTasks.length; i++){
+
+        for (int i = 0; i < listOfTasks.length; i++) {
             System.out.println(i + ": " + String.join(" ", listOfTasks[i]));
         }
+
 //        System.out.println("listTasks() function doing nothing!");
         return listOfTasks;
     }
