@@ -4,20 +4,42 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class TaskManager {
 
     public static void main(String[] args) {
         String tasksPath = "tasks.csv";
+        String [][] finalListOfTasks = null;
         String[][] allTasks = tasks(tasksPath);
         if (allTasks == null){
             return;
         }
-        printMenu();
-        System.out.println();
-    }
+        while (true){
+
+            printMenu();
+            String chosenOption = chooseOption();
+//            System.out.print("Chosen option is: " + chosenOption);
+            System.out.println();
+            if (chosenOption.equals("add") || chosenOption.equals("remove") || chosenOption.equals("list") ){
+                allTasks = runChosenOption(chosenOption, allTasks, tasksPath);
+            } else if (chosenOption.equals("exit")) {
+                finalListOfTasks = runChosenOption(chosenOption, allTasks, tasksPath);
+                return;
+
+            } else {
+                runChosenOption(chosenOption, allTasks, tasksPath);
+            }
+
+
+
+        }
+        }
+
 
     public static String[][] tasks(String pathToTasks) {
         File file = new File(pathToTasks);
@@ -38,9 +60,14 @@ public class TaskManager {
                     tempArray[tempArray.length - 1] = singleLine;
                 }
             }
-            results = new String[tempArray.length][1];
-            for (int i = 0; i < results.length; i++){
-                results[i] = tempArray[i].split(";");
+            if (tempArray != null){
+
+                results = new String[tempArray.length][1];
+                for (int i = 0; i < results.length; i++){
+                    results[i] = tempArray[i].split(";");
+                }
+            } else {
+                return null;
             }
 
         } catch (FileNotFoundException e) {
@@ -48,6 +75,111 @@ public class TaskManager {
 
         }
         return results;
+    }
+
+    public static String chooseOption(){
+        System.out.println();
+        System.out.print("My choice is: ");
+        Scanner input = new Scanner(System.in);
+        return input.nextLine().strip();
+    }
+
+    public static String[][] runChosenOption(String input, String[][] listOfTasks, String filePath){
+        return switch (input) {
+            case "add" -> addTask(listOfTasks);
+            case "remove" -> removeTask(listOfTasks);
+            case "list" -> listTasks(listOfTasks);
+            case "exit" -> exitProgram(listOfTasks, filePath);
+            default -> {
+                System.out.println("Please select a correct option!");
+                yield listOfTasks;
+            }
+        };
+    }
+
+    public static String[][] addTask(String[][] listOfTasks){
+        String [] singleTask = new String[3];
+        Scanner readInput = new Scanner(System.in);
+        System.out.print("Please add task description: ");
+        singleTask[0] = readInput.nextLine().strip();
+//        System.out.println();
+        System.out.print("Please add task due date: ");
+        singleTask[1] = readInput.nextLine().strip();
+//        System.out.println();
+        while (true){
+            System.out.print("Is your task important: true/false: ");
+            String taskImportance = readInput.nextLine().strip();
+            if (taskImportance.equals("true") || taskImportance.equals("false")){
+                singleTask[2] = taskImportance;
+                break;
+            }
+        }
+        listOfTasks = Arrays.copyOf(listOfTasks, listOfTasks.length + 1);
+        listOfTasks[listOfTasks.length - 1] = singleTask;
+        return listOfTasks;
+
+    }
+
+    public static String[][] removeTask(String[][] listOfTasks){
+        String [][] shrinkedListOfTasks = new String[listOfTasks.length - 1][1];
+        int counter = 0;
+        int index = 0;
+        String userInput = null;
+        Scanner readInput = new Scanner(System.in);
+
+
+
+        while (true){
+            System.out.print("Please select a number to remove: ");
+            userInput = readInput.nextLine().strip();
+            if (StringUtils.isNumeric(userInput)){
+                index = Integer.parseInt(userInput);
+                if (index >= listOfTasks.length){
+                    System.out.println("Please provide an integer number in the range: [0, " + (listOfTasks.length - 1) + "]");
+                } else {
+                    for (int i = 0; i < listOfTasks.length; i++){
+                        if (i != index){
+                            shrinkedListOfTasks[counter] = listOfTasks[i];
+                            counter++;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+
+
+
+//        if (index < listOfTasks.length){
+
+
+//        }
+        System.out.println("Value was successfully removed!");
+        return shrinkedListOfTasks;
+    }
+
+    public static String[][] listTasks(String[][] listOfTasks){
+        for (int i = 0; i < listOfTasks.length; i++){
+            System.out.println(i + ": " + String.join(" ", listOfTasks[i]));
+        }
+//        System.out.println("listTasks() function doing nothing!");
+        return listOfTasks;
+    }
+
+    public static String[][] exitProgram(String[][] listOfTasks, String tasksPath)  {
+        File file = new File(tasksPath);
+        try (FileWriter fileWriter = new FileWriter(file)){
+            for (String [] task: listOfTasks){
+                fileWriter.append(String.join(", ", task)).append("\n");
+            }
+        } catch (IOException exc){
+            System.out.println(exc.getMessage());
+            System.out.println("Unable to save the tasks list properly!");
+            return listOfTasks;
+        }
+        System.out.println(ConsoleColors.RED + "Bye, Bye");
+        return listOfTasks;
     }
 
     public static String[] createMenu(){
@@ -63,16 +195,14 @@ public class TaskManager {
 
     public static void printMenu(){
         String [] menu = createMenu();
-        int counter = 0;
+//        int counter = 0;
         System.out.println();
         for (String element: menu){
-            if (counter == 0) {
-                System.out.println(element);
-                System.out.println();
-            } else {
-                System.out.println(element);
-            }
-            counter ++;
+            System.out.println(element);
+//            if (counter == 0) {
+//                System.out.println();
+//            }
+//            counter ++;
         }
     }
 }
